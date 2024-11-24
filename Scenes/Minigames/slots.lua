@@ -8,7 +8,7 @@ local game = {
     slots = {1, 1, 1},
     betAmount = 100,
     spinning = false,
-    spinDuration = 0,
+    spinDuration = 0.5,
     result = "",
     resultTimer = 0
 }
@@ -18,17 +18,17 @@ local SLOT_WIDTH = 100
 local SLOT_HEIGHT = 120
 local REEL_SPACING = 15
 local SPIN_TIME = 0.5
-
 function slots.load()
     -- Load images
     game.images = {
-        love.graphics.newImage("/Sprites/dave.png"),
-        love.graphics.newImage("/Sprites/kacper.png"),
-        love.graphics.newImage("/Sprites/logan.png"),
-        love.graphics.newImage("/Sprites/sophia.png"),
-    }
+        love.graphics.newImage("Sprites/i1.jpg"),
+        love.graphics.newImage("Sprites/i2.jpg"),
+        love.graphics.newImage("Sprites/i3.jpg"),
+        love.graphics.newImage("Sprites/i4.jpg"),
+        love.graphics.newImage("Sprites/i5.jpg"),
+    } 
     
-    -- Set up fonts
+    -- Set up fonts 
     game.font = love.graphics.newFont(14)
     game.largeFont = love.graphics.newFont(24)
     
@@ -64,11 +64,6 @@ function slots.draw()
     love.graphics.rectangle("fill", 5, 5, 150, 40, 20, 20)
     love.graphics.setColor(1, 0, 1)
     love.graphics.rectangle("line", 5, 5, 150, 40, 20, 20)
-    
-    -- Draw money display text
-    love.graphics.setFont(game.largeFont)
-    love.graphics.setColor(1, 0.84, 0)
-    love.graphics.print("$" .. string.format("%d", _G.money), 10, 10)
     
     -- Draw title with background
     love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
@@ -139,36 +134,49 @@ function slots.draw()
         love.graphics.setColor(1, 1, 1)
         love.graphics.printf(game.result, 0, 400, love.graphics.getWidth(), "center")
     end
+    print('worked')
+    local x = 0;
+    for playerName, playerData in pairs(world) do
+        -- Draw money display text
+        
+        love.graphics.setFont(game.largeFont)
+        love.graphics.setColor(1, 0.84, 0)
+        love.graphics.print(playerName .. ": " .. tostring(playerData.money), 3, 6+x)
+        x = x + 30
+    end
+    -- world[nameInput.text].money
 end
 
-function slots.mousepressed(x, y, button)
+function love.mousepressed(x, y, button)
     -- Check for spin button click
+    love.graphics.print("H", love.graphics.getWidth() / 2 - 50, love.graphics.getHeight()/2 -100)
     local buttonX = love.graphics.getWidth() / 2 - 50
-    local buttonY = 350
-    if x >= buttonX and x <= buttonX + 100 and
-       y >= buttonY and y <= buttonY + 40 then
-        slots.spin()
-    end
+    local buttonY = love.graphics.getHeight()/2 -100
+    slots.spin()
+    
 end
 
 function slots.spin()
-    if _G.money < game.betAmount then
-        game.result = "You don't have enough money to play!"
-        game.resultTimer = 2
-        return
-    end
-    
-    if game.spinning then
-        return
-    end
-    
-    _G.money = _G.money - game.betAmount
-    game.spinning = true
-    
-    -- Randomize slots
     for i = 1, 3 do
         game.slots[i] = love.math.random(1, #game.images)
     end
+
+    if not world[nameInput.text] then
+        world[nameInput.text] = {money = 1000}
+    end
+    
+    if world[nameInput.text].money < game.betAmount then
+        game.result = "You don't have enough money to play!"
+        game.resultTimer = 2
+        -- return
+    end
+    
+    world[nameInput.text].money = world[nameInput.text].money - game.betAmount
+    game.spinning = true
+    
+    -- Randomize slots
+
+
 end
 
 function slots.checkWin()
@@ -176,20 +184,21 @@ function slots.checkWin()
     
     -- Check for three of a kind
     if game.slots[1] == game.slots[2] and game.slots[2] == game.slots[3] then
-        winAmount = game.betAmount * 10
-        game.result = "🎉 Jackpot! You win $" .. winAmount .. "! 🎉"
+        winAmount = game.betAmount * 5
+        game.result = "Jackpot! You win $" .. winAmount .. "!"
         -- game.sounds.cheer:play()
     -- Check for two of a kind
     elseif game.slots[1] == game.slots[2] or game.slots[2] == game.slots[3] or game.slots[1] == game.slots[3] then
-        winAmount = game.betAmount * 2
-        game.result = "✨ Matched two symbols! You win $" .. winAmount .. "! ✨"
-        game.sounds.cheer:play()
+        winAmount = game.betAmount * 0.5
+        game.result = "Matched two symbols! You win $" .. winAmount .. "!"
+        -- game.sounds.cheer:play()
     else
-        game.result = "💔 You lost this round!"
+        winAmount = game.betAmount*-1
+        game.result = "You lost this round!"
         -- game.sounds.unhappy:play()
     end
     
-    _G.money = _G.money + winAmount
+    world[nameInput.text].money = world[nameInput.text].money + winAmount
     game.resultTimer = 2
 end
 

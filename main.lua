@@ -37,7 +37,7 @@ function love.update(dt) -- Runs every frame.
     if nextState == "startGame" then
         -- Switch to the game scene
         print("Switching to the arcade game scene")
-        state.current = require("Scenes/gametest")
+        state.current = require("Scenes/game")
         state.current.load()
     elseif nextState == "mainMenu" then
         -- Switch to the main menu scene

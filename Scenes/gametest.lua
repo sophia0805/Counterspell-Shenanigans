@@ -22,8 +22,8 @@ function gameTest.load()
     math.randomseed(os.time())
     -- entity = tostring(math.random(99999))
     entity = nameInput.text
-    world[entity] = {x = 320, y = 240, timestamp = os.time()} -- Initialize `world[entity]`
-    local dg = string.format("%s %s %d %d", entity, 'at', 320, 240)
+    world[entity] = {x = 320, y = 240, timestamp = os.time(), money = 10000} -- Initialize `world[entity]`
+    local dg = string.format("%s %s %d %d %d", entity, 'at', 320, 240, 10000)
     udp:send(dg)
 
     t = 0
@@ -32,14 +32,14 @@ end
 function gameTest.update(dt)
     t = t + dt -- increase t by the dt
 
-    if love.keyboard.isDown('up') then diffy = diffy - (20 * dt) end
-    if love.keyboard.isDown('down') then diffy = diffy + (20 * dt) end
-    if love.keyboard.isDown('left') then diffx = diffx - (20 * dt) end
-    if love.keyboard.isDown('right') then diffx = diffx + (20 * dt) end
+    if love.keyboard.isDown('up') then diffy = diffy - (40 * dt) end
+    if love.keyboard.isDown('down') then diffy = diffy + (40 * dt) end
+    if love.keyboard.isDown('left') then diffx = diffx - (40 * dt) end
+    if love.keyboard.isDown('right') then diffx = diffx + (40 * dt) end
     
     if t > updaterate then
         -- print(entity)
-        print(diffx - world[entity].x .. "," .. diffy - world[entity].y)
+        -- print(diffx - world[entity].x .. "," .. diffy - world[entity].y)
         -- diffx, diffy = world[entity].x, world[entity].y
         local dg = string.format("%s %s %d %d", entity, 'move', diffx, diffy)
         udp:send(dg)
@@ -109,5 +109,6 @@ function love.quit()
     udp:send(rq)
     udp:close()
 end
+
 
 return gameTest
