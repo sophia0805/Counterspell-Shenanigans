@@ -1,10 +1,10 @@
 -- The main menu for the program
 mainMenu = {}
 
-local suit = require("SUIT")
+local suit = require("Libraries/SUIT")
 
 -- Load scaling libraries
-local CScreen = require "cscreen"
+local CScreen = require("Libraries/cscreen")
 
 love.graphics.setDefaultFilter("nearest", "nearest")
 -- local optionsIcon = love.graphics.newImage("Sprites/gearIcon.png")
@@ -37,10 +37,10 @@ function mainMenu.load()
     suit.theme.color.active = {bg = {150,150,150}, fg = {0,0,0}}
 
     -- Load font
-    font = love.graphics.newFont("Fonts/VCR_OSD_MONO.ttf", 100 * math.min(scaleStuff("w"), scaleStuff("h"))) -- The font
-    font1 = love.graphics.newFont("Fonts/VCR_OSD_MONO.ttf", 75 * math.min(scaleStuff("w"), scaleStuff("h")))
-    font2 = love.graphics.newFont("Fonts/VCR_OSD_MONO.ttf", 50 * math.min(scaleStuff("w"), scaleStuff("h")))
-    font3 = love.graphics.newFont("Fonts/VCR_OSD_MONO.ttf", 25 * math.min(scaleStuff("w"), scaleStuff("h")))
+    font = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 100 * math.min(scaleStuff("w"), scaleStuff("h"))) -- The font
+    font1 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 75 * math.min(scaleStuff("w"), scaleStuff("h")))
+    font2 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 50 * math.min(scaleStuff("w"), scaleStuff("h")))
+    font3 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 25 * math.min(scaleStuff("w"), scaleStuff("h")))
     love.graphics.setFont(font)
 
     -- print(love.filesystem.read("saveFile.txt"))
@@ -48,15 +48,16 @@ end
 
 function mainMenu.update(dt)
     -- Move GUI a bit
-    menuGUIUpdate(dt)
+    -- menuGUIUpdate(dt)
     
     -- Create suit GUI elements
     if suit.Button("Start", ((screenWidth / 2) - 200) * scaleStuff("w"), (screenHeight - 275) * scaleStuff("h"),
             400 * scaleStuff("w"), 150 * scaleStuff("h")).hit then
-                bgSong:stop()
-                selectSound:play()
-                return "startCalculator"
+                -- bgSong:stop()
+                -- selectSound:play()
+                return "startGame"
     end
+    -- print((((screenWidth / 2) - 200) * scaleStuff("w")) .. "," .. ((screenHeight - 275) * scaleStuff("h")))
 end
 
 function mainMenu.draw()
@@ -67,6 +68,8 @@ function mainMenu.draw()
     love.graphics.clear(2 / 255, 51 / 255, 79 / 255)
 
     CScreen.cease()
+
+    mainMenu.drawSUIT()
 end
 
 function mainMenu.drawSUIT() -- Draws SUIT Elements

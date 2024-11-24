@@ -11,12 +11,12 @@ function love.load()
     -- Load window values
     love.window.setFullscreen(true)
 
-    love.window.setMode(love.graphics.getWidth(), love.graphics.getHeight()) -- Set to 1920 x 1080 on launch
+    love.window.setMode(love.graphics.getWidth()/3, love.graphics.getHeight()/3) -- Set to 1920 x 1080 on launch
 
-    love.window.setFullscreen(true)
+    -- love.window.setFullscreen(true)
 
     -- love.window.setMode(2340/2, 1080/2) -- Set to custom w / h for debug
-
+    -- print("THINGY")
     love.window.setTitle("Creative Game Name")
     love.math.setRandomSeed(os.time())
 
@@ -33,21 +33,17 @@ function love.update(dt) -- Runs every frame.
 
     -- print("FPS: " .. love.timer.getFPS())
 
-    if splashDone == 0 then
-        splash:update(dt)
-    else
-        local nextState = state.current.update(dt)
-        if nextState == "startGame" then
-            -- Switch to the game scene
-            print("Switching to the arcade game scene")
-            state.current = require("Scenes/game")
-            state.current.load()
-        elseif nextState == "mainMenu" then
-            -- Switch to the main menu scene
-            print("Switching to the main menu scene")
-            state.current = require("Scenes/mainMenu")
-            state.current.load()
-        end
+    local nextState = state.current.update(dt)
+    if nextState == "startGame" then
+        -- Switch to the game scene
+        print("Switching to the arcade game scene")
+        state.current = require("Scenes/gametest")
+        state.current.load()
+    elseif nextState == "mainMenu" then
+        -- Switch to the main menu scene
+        print("Switching to the main menu scene")
+        state.current = require("Scenes/mainMenu")
+        state.current.load()
     end
 end
 
