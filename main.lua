@@ -13,7 +13,7 @@ function love.load()
 
     love.window.setMode(love.graphics.getWidth()/3, love.graphics.getHeight()/3) -- Set to 1920 x 1080 on launch
 
-    -- love.window.setFullscreen(true)
+    love.window.setFullscreen(true)
 
     -- love.window.setMode(2340/2, 1080/2) -- Set to custom w / h for debug
     -- print("THINGY")
@@ -24,7 +24,7 @@ function love.load()
     -- CScreen.init(1920, 1080, true)
 
     -- Load the menu state
-    state.current = require("Scenes/mainMenu")
+    state.current = require("Scenes/Mainmenu")
     state.current.load()
 end
 
@@ -57,8 +57,15 @@ function love.draw() -- Draws every frame / Runs directly after love.update()
     -- CScreen.cease()
 end
 
-function love.keypressed()
+function love.keypressed(key)
+    if key == "]" then
+        local dg = string.format("%s %s $", entity, 'quit')
+        udp:send(dg)
+    elseif key == "=" then
+        love.event.quit()
+    end 
 end
+
 
 -- Scaling Function
 function love.resize(width, height)
