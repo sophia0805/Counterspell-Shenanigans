@@ -142,7 +142,7 @@ function slots.draw()
         love.graphics.setFont(game.largeFont)
         love.graphics.setColor(1, 0.84, 0)
         love.graphics.print(playerName .. ": " .. tostring(playerData.money), 5, 8+x)
-        x = x + 30
+        x = x + 35
 
     end
     -- world[nameInput.text].money
