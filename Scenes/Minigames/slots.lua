@@ -59,11 +59,7 @@ function slots.update(dt)
 end
 
 function slots.draw()
-    -- Draw money display background and border
-    love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
-    love.graphics.rectangle("fill", 5, 5, 150, 40, 20, 20)
-    love.graphics.setColor(1, 0, 1)
-    love.graphics.rectangle("line", 5, 5, 150, 40, 20, 20)
+
     
     -- Draw title with background
     love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
@@ -134,15 +130,20 @@ function slots.draw()
         love.graphics.setColor(1, 1, 1)
         love.graphics.printf(game.result, 0, 400, love.graphics.getWidth(), "center")
     end
-    print('worked')
+
     local x = 0;
     for playerName, playerData in pairs(world) do
+        -- Draw money display background and border
+        love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
+        love.graphics.rectangle("fill", 5, 5+x, 175, 40, 20, 20)
+        love.graphics.setColor(1, 0, 1)
+        love.graphics.rectangle("line", 5, 5+x, 175, 40, 20, 20)
         -- Draw money display text
-        
         love.graphics.setFont(game.largeFont)
         love.graphics.setColor(1, 0.84, 0)
-        love.graphics.print(playerName .. ": " .. tostring(playerData.money), 3, 6+x)
-        x = x + 30
+        love.graphics.print(playerName .. ": " .. tostring(playerData.money), 5, 8+x)
+        x = x + 35
+
     end
     -- world[nameInput.text].money
 end
