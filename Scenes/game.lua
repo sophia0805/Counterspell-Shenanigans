@@ -57,10 +57,10 @@ end
 function lobbyupdate(dt)
     t = t + dt -- increase t by the dt
 
-    if love.keyboard.isDown('up') then diffy = diffy - (100 * dt) end
-    if love.keyboard.isDown('down') then diffy = diffy + (100 * dt) end
-    if love.keyboard.isDown('left') then diffx = diffx - (100 * dt) end
-    if love.keyboard.isDown('right') then diffx = diffx + (100 * dt) end
+    if love.keyboard.isDown('up') then diffy = diffy - (80 * dt) end
+    if love.keyboard.isDown('down') then diffy = diffy + (80 * dt) end
+    if love.keyboard.isDown('left') then diffx = diffx - (40 * dt) end
+    if love.keyboard.isDown('right') then diffx = diffx + (40 * dt) end
     
     if t > updaterate then
         -- print(entity)
@@ -92,7 +92,7 @@ function lobbyupdate(dt)
                 local x, y = parms:match("^(%-?[%d.e]*) (%-?[%d.e]*)$")
                 assert(x and y)
                 x, y = tonumber(x), tonumber(y)
-                world[ent] = {x=x, y=y, timestamp=os.time(), money = 10000}  -- Add default money
+                world[ent] = {x=x, y=y, timestamp=os.time(), money = world[nameInput.text].money}  -- Add default money
             elseif cmd == 'exit' then
                 print(ent .. " was just removed.")
                 world[ent] = nil
