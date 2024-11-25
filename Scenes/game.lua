@@ -57,10 +57,10 @@ end
 function lobbyupdate(dt)
     t = t + dt -- increase t by the dt
 
-    if love.keyboard.isDown('up') then diffy = diffy - (80 * dt) end
-    if love.keyboard.isDown('down') then diffy = diffy + (80 * dt) end
-    if love.keyboard.isDown('left') then diffx = diffx - (40 * dt) end
-    if love.keyboard.isDown('right') then diffx = diffx + (40 * dt) end
+    if love.keyboard.isDown('up') then diffy = diffy - (100 * dt) end
+    if love.keyboard.isDown('down') then diffy = diffy + (100 * dt) end
+    if love.keyboard.isDown('left') then diffx = diffx - (100 * dt) end
+    if love.keyboard.isDown('right') then diffx = diffx + (100 * dt) end
     
     if t > updaterate then
         -- print(entity)
