@@ -39,11 +39,11 @@ function mainMenu.load()
     suit.theme.color.active = {bg = {150,150,150}, fg = {0,0,0}}
 
     -- -- Load font
-    -- font = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 100 * math.min(scaleStuff("w"), scaleStuff("h"))) -- The font
-    -- font1 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 75 * math.min(scaleStuff("w"), scaleStuff("h")))
-    -- font2 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 50 * math.min(scaleStuff("w"), scaleStuff("h")))
-    -- font3 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 25 * math.min(scaleStuff("w"), scaleStuff("h")))
-    -- love.graphics.setFont(font)
+    font = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 100 * math.min(scaleStuff("w"), scaleStuff("h"))) -- The font
+    font1 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 75 * math.min(scaleStuff("w"), scaleStuff("h")))
+    font2 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 50 * math.min(scaleStuff("w"), scaleStuff("h")))
+    font3 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 25 * math.min(scaleStuff("w"), scaleStuff("h")))
+    love.graphics.setFont(font)
     love.keyboard.setKeyRepeat(true)
 
     -- print(love.filesystem.read("saveFile.txt"))

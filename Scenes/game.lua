@@ -92,7 +92,7 @@ function lobbyupdate(dt)
                 local x, y = parms:match("^(%-?[%d.e]*) (%-?[%d.e]*)$")
                 assert(x and y)
                 x, y = tonumber(x), tonumber(y)
-                world[ent] = {x=x, y=y, timestamp=os.time(), money = world[nameInput.text].money}  -- Add default money
+                world[ent] = {x=x, y=y, timestamp=os.time(), money = world[entity].money}  -- Add default money
             elseif cmd == 'exit' then
                 print(ent .. " was just removed.")
                 world[ent] = nil
