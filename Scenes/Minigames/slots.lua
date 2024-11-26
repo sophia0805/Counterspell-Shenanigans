@@ -33,11 +33,8 @@ function slots.load()
     } 
     
     -- Set up fonts 
-    font = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 100 * math.min(scaleStuff("w"), scaleStuff("h"))) -- The font
-    font1 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 75 * math.min(scaleStuff("w"), scaleStuff("h")))
-    font2 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 50 * math.min(scaleStuff("w"), scaleStuff("h")))
-    font3 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 25 * math.min(scaleStuff("w"), scaleStuff("h")))
-    love.graphics.setFont(font2)
+    game.font = love.graphics.newFont(14)
+    game.largeFont = love.graphics.newFont(24)
     
     -- Set up sounds
     --game.sounds = {
@@ -129,6 +126,7 @@ function slots.draw()
     
     -- Draw result message with background
     if game.result ~= "" then
+        love.graphics.setFont(game.largeFont)
         love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
         love.graphics.rectangle("fill", love.graphics.getWidth()/2 - 250, 395, 500, 50, 20, 20)
         love.graphics.setColor(1, 0.84, 0)
@@ -145,10 +143,10 @@ function slots.draw()
         love.graphics.setColor(1, 0, 1)
         love.graphics.rectangle("line", 5, 5+x, 175, 40, 20, 20)
         -- Draw money display text
+        love.graphics.setFont(game.largeFont)
         love.graphics.setColor(1, 0.84, 0)
-
-        love.graphics.print(playerName .. ": " .. tostring(playerData.params.money), 5, 8+x)
-        x = x + 35
+        love.graphics.print(playerName .. ": " .. tostring(playerData.params.money), 15, 8+x)
+        x = x + 45
 
     end
     -- world[nameInput.text].params.money
@@ -187,22 +185,6 @@ function slots.spin()
     for i = 1, 3 do
         game.slots[i] = love.math.random(1, #game.images)
     end
-
-    if not world[nameInput.text] then
-        world[nameInput.text] = {money = 1000}
-    end
-    
-    if world[nameInput.text].money < game.betAmount then
-        game.result = "You don't have enough money to play!"
-        game.resultTimer = 2
-        -- return
-    end
-    
-    world[nameInput.text].money = world[nameInput.text].money - game.betAmount
-    game.spinning = true
-    
-    -- Randomize slots
-
 end
 
 function slots.checkWin()
