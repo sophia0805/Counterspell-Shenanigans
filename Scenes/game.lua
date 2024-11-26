@@ -33,7 +33,7 @@ function game.load()
 
     t = 0
 
-    minigame.current = require("Scenes/Minigames/slots")
+    minigame.current = require("Scenes/Minigames/roulette")
     minigame.current.load()
 end
 

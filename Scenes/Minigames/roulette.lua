@@ -1,173 +1,245 @@
--- The Roulette minigame
-roulette = {}
+local roulette = {}
 
--- Constants
-local WINDOW_WIDTH = 800
-local WINDOW_HEIGHT = 600
-local BLOCK_WIDTH = 120
-local BLOCK_HEIGHT = 40
-local PLAYER_SIZE = 40
-local BALL_RADIUS = 25
-local GRAVITY = 400
-local BOUNCE_DAMPING = 0.9
-local BALL_SPEED = 300
+-- Constants for table layout
+local TABLE_WIDTH = 800
+local TABLE_HEIGHT = 400
+local WHEEL_RADIUS = 200
+local BALL_RADIUS = 5
 
-function roulette.load()
-    -- Load player image and give them a position.
-    -- Load roulette game sprites. (Ball, red side / blue side, etc)
-    state = {
-        -- Player setup
-        player = {
-            x = 200,
-            y = WINDOW_HEIGHT - BLOCK_HEIGHT - PLAYER_SIZE,
-            isWhite = true,
-            money = 100,
-            colorTimer = 0
-        },
-        
-        -- Ball setup
-        ball = {
-            x = WINDOW_WIDTH / 2,
-            y = WINDOW_HEIGHT / 4,
-            dx = BALL_SPEED,
-            dy = 0
-        },
-        
-        -- Initialize blocks array
-        blocks = {},
-        
-        -- Game time
-        time = 0
-    }
-    
-    -- Create initial blocks
-    for i = 0, math.floor(WINDOW_WIDTH / BLOCK_WIDTH) + 1 do
-        table.insert(state.blocks, {
-            x = i * BLOCK_WIDTH,
-            y = WINDOW_HEIGHT - BLOCK_HEIGHT,
-            isWhite = i % 2 == 0
-        })
+-- Roulette numbers in order (standard European roulette wheel)
+local WHEEL_NUMBERS = {
+    0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27,
+    13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1,
+    20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
+}
+
+-- Colors for numbers
+local NUMBER_COLORS = {
+    [0] = {0, 0.5, 0}, -- Green for 0
+}
+-- Set red and black colors
+for _, num in ipairs(WHEEL_NUMBERS) do
+    if num > 0 then
+        if num == 1 or num == 3 or num == 5 or num == 7 or num == 9 or
+           num == 12 or num == 14 or num == 16 or num == 18 or num == 19 or
+           num == 21 or num == 23 or num == 25 or num == 27 or num == 30 or
+           num == 32 or num == 34 or num == 36 then
+            NUMBER_COLORS[num] = {0.8, 0, 0} -- Red
+        else
+            NUMBER_COLORS[num] = {0, 0, 0} -- Black
+        end
     end
 end
 
+-- Game state
+local wheelAngle = 0
+local ballAngle = 0
+local ballSpeed = 0
+local isSpinning = false
+local currentBet = 0
+local selectedNumber = nil
+local gameResult = nil
+local spinTime = 0
+local spinDuration = 5
+
+function roulette.load()
+    font = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 100 * math.min(scaleStuff("w"), scaleStuff("h"))) -- The font
+    font1 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 70 * math.min(scaleStuff("w"), scaleStuff("h")))
+    font2 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 50 * math.min(scaleStuff("w"), scaleStuff("h")))
+    font3 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 28 * math.min(scaleStuff("w"), scaleStuff("h")))
+    love.graphics.setFont(font3)
+end
+
 function roulette.update(dt)
-    -- Update game time
-    state.time = state.time + dt
-    
-    -- Update ball physics
-    state.ball.x = state.ball.x + state.ball.dx * dt
-    state.ball.y = state.ball.y + state.ball.dy * dt
-    state.ball.dy = state.ball.dy + GRAVITY * dt
-    
-    -- Ball bounce off bottom
-    if state.ball.y > WINDOW_HEIGHT - BLOCK_HEIGHT - BALL_RADIUS then
-        state.ball.y = WINDOW_HEIGHT - BLOCK_HEIGHT - BALL_RADIUS
-        state.ball.dy = -math.abs(state.ball.dy) * BOUNCE_DAMPING
-    end
-    -- Ball bounce off walls
-    if state.ball.x > WINDOW_WIDTH - BALL_RADIUS then
-        state.ball.x = WINDOW_WIDTH - BALL_RADIUS
-        state.ball.dx = -math.abs(state.ball.dx)
-    elseif state.ball.x < BALL_RADIUS then
-        state.ball.x = BALL_RADIUS
-        state.ball.dx = math.abs(state.ball.dx)
-    end
-    
-    -- Update blocks
-    for _, block in ipairs(state.blocks) do
-        block.x = block.x - 200 * dt
+    if isSpinning then
+        spinTime = spinTime + dt
+        
+        -- Update wheel rotation
+        wheelAngle = wheelAngle + dt * 2
+        
+        -- Update ball rotation and speed
+        if spinTime < spinDuration then
+            ballSpeed = math.max(10 * (1 - spinTime/spinDuration), 2)
+            ballAngle = ballAngle + ballSpeed * dt
+        else
+            ballSpeed = 0
+            isSpinning = false
+            
+            local finalAngle = ballAngle % (2 * math.pi)
+            local segment = math.floor(finalAngle / (2 * math.pi) * 37) + 1
+            gameResult = WHEEL_NUMBERS[segment]
+            
+            if selectedNumber == gameResult then
+                game.addMoney(entity, currentBet * 35)
+            end
+        end
     end
     
-    -- Remove off-screen blocks
-    while #state.blocks > 0 and state.blocks[1].x + BLOCK_WIDTH < 0 do
-        table.remove(state.blocks, 1)
+    -- return nil
+end
+
+local function drawWheel()
+    love.graphics.push()
+    love.graphics.translate(TABLE_WIDTH, TABLE_HEIGHT/1.5)
+    
+    -- Draw outer wheel
+    love.graphics.setColor(0.8, 0.8, 0.8)
+    love.graphics.circle("fill", 0, 0, WHEEL_RADIUS)
+    love.graphics.setColor(0.2, 0.2, 0.2)
+    love.graphics.circle("line", 0, 0, WHEEL_RADIUS)
+    
+    -- Draw segments
+    for i, number in ipairs(WHEEL_NUMBERS) do
+        local angle = (i-1) * (2 * math.pi / 37) + wheelAngle
+        local color = NUMBER_COLORS[number]
+        love.graphics.setColor(color[1], color[2], color[3])
+        
+        -- Draw segment
+        love.graphics.arc("fill", 0, 0, WHEEL_RADIUS-5, 
+            angle, angle + (2 * math.pi / 37))
+        
+        -- Draw number
+        love.graphics.setColor(1, 1, 1)
+        local textX = (WHEEL_RADIUS-25) * math.cos(angle + math.pi/37)
+        local textY = (WHEEL_RADIUS-25) * math.sin(angle + math.pi/37)
+        love.graphics.print(tostring(number), textX-6, textY-6)
     end
     
-    -- Add new blocks
-    local lastBlock = state.blocks[#state.blocks]
-    if lastBlock.x + BLOCK_WIDTH < WINDOW_WIDTH then
-        table.insert(state.blocks, {
-            x = lastBlock.x + BLOCK_WIDTH,
-            y = WINDOW_HEIGHT - BLOCK_HEIGHT,
-            isWhite = not lastBlock.isWhite
-        })
+    -- Draw ball
+    if isSpinning or gameResult then
+        love.graphics.setColor(0.9, 0.9, 0.9)
+        local ballX = (WHEEL_RADIUS-20) * math.cos(ballAngle)
+        local ballY = (WHEEL_RADIUS-20) * math.sin(ballAngle)
+        love.graphics.circle("fill", ballX, ballY, BALL_RADIUS)
     end
     
-    -- Update player color
-    state.player.colorTimer = state.player.colorTimer + dt
-    if state.player.colorTimer >= 2 then
-        state.player.isWhite = not state.player.isWhite
-        state.player.colorTimer = 0
-    end
+    love.graphics.pop()
+end
+
+local function drawBettingTable()
+    -- Draw green background
+    love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
+    love.graphics.rectangle("fill", 195, 5, 250, 40, 20, 20)
+    love.graphics.setColor(0, 1, 1)
+    love.graphics.rectangle("line", 195, 5, 250, 40, 20, 20)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("Roulette", 200, 10)
     
-    -- Handle player movement
-    if love.keyboard.isDown('left') then
-        state.player.x = math.max(0, state.player.x - 300 * dt)
-    end
-    if love.keyboard.isDown('right') then
-        state.player.x = math.min(WINDOW_WIDTH - PLAYER_SIZE, state.player.x + 300 * dt)
-    end
+    -- Draw number grid
+    local gridX, gridY = 100, 100
+    local cellWidth, cellHeight = 40, 40
     
-    -- Check collisions and update money
-    checkCollisions()
+    -- Numbers array matching the layout in your screenshot
+    local numbers = {
+        {3, 6, 9, 12, 15, 18, 21, 24, 27},
+        {2, 5, 8, 11, 14, 17, 20, 23, 26},
+        {1, 4, 7, 10, 13, 16, 19, 22, 25}
+    }
+    
+    -- Draw 0 first
+    love.graphics.setColor(0, 0.5, 0)
+    love.graphics.rectangle("fill", gridX - cellWidth, gridY, cellWidth, cellHeight * 3)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("0", gridX - cellWidth + cellWidth/4, gridY + cellHeight)
+
+    -- Draw main grid
+    for row = 1, 3 do
+        for col = 1, 9 do
+            local number = numbers[row][col]
+            local x = gridX + (col-1) * cellWidth
+            local y = gridY + (row-1) * cellHeight
+            
+            -- Draw cell background
+            love.graphics.setColor(NUMBER_COLORS[number][1], NUMBER_COLORS[number][2], NUMBER_COLORS[number][3])
+            love.graphics.rectangle("fill", x, y, cellWidth, cellHeight)
+            
+            -- Draw borders
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("line", x, y, cellWidth, cellHeight)
+            
+            -- Draw number
+            love.graphics.setColor(1, 1, 1)
+            if number < 10 then
+                love.graphics.print(tostring(number), x + cellWidth/3, y + cellHeight/4)
+            else
+                love.graphics.print(tostring(number), x + cellWidth/4, y + cellHeight/4)
+            end
+            
+            -- Highlight selected number
+            if selectedNumber == number then
+                love.graphics.setColor(1, 1, 0, 0.3)
+                love.graphics.rectangle("fill", x, y, cellWidth, cellHeight)
+            end
+        end
+    end
 end
 
 function roulette.draw()
     -- Draw background
-    love.graphics.setBackgroundColor(0.1, 0.1, 0.15)
-    love.graphics.clear()
+    love.graphics.clear(2 / 255, 51 / 255, 79 / 255)
+    love.graphics.setColor(0.2, 0.2, 0.2)
+    love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
     
-    -- Draw blocks
-    for _, block in ipairs(state.blocks) do
-        if block.isWhite then
-            love.graphics.setColor(1, 1, 1)
-        else
-            love.graphics.setColor(0, 0, 0)
-        end
-        love.graphics.rectangle("fill", block.x, block.y, BLOCK_WIDTH, BLOCK_HEIGHT)
-        love.graphics.setColor(0.4, 0.4, 0.4)
-        love.graphics.rectangle("line", block.x, block.y, BLOCK_WIDTH, BLOCK_HEIGHT)
-    end
+    drawBettingTable()
+    drawWheel()
     
-    -- Draw ball
-    love.graphics.setColor(0.8, 0.2, 0.2)
-    love.graphics.circle("fill", state.ball.x, state.ball.y, BALL_RADIUS)
-    love.graphics.setColor(0.9, 0.3, 0.3)
-    love.graphics.circle("fill", state.ball.x, state.ball.y, BALL_RADIUS * 0.7)
-    
-    -- Draw player
-    if state.player.isWhite then
-        love.graphics.setColor(1, 1, 1)
-    else
-        love.graphics.setColor(0, 0, 0)
-    end
-    love.graphics.rectangle("fill", state.player.x, state.player.y, PLAYER_SIZE, PLAYER_SIZE)
-    
-    -- Draw money counter
-    love.graphics.setColor(0, 0, 0, 0.7)
-    love.graphics.rectangle("fill", 5, 5, 150, 30)
+    -- Draw UI text
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Money: $" .. math.floor(state.player.money), 10, 10)
+    love.graphics.print("Current Bet: $" .. currentBet, 50, 20)
+    
+    -- Draw instructions
+    love.graphics.print("Click numbers to select bet", 50, TABLE_HEIGHT-30)
+    love.graphics.print("Use UP/DOWN to change bet", 50, TABLE_HEIGHT-15)
+    love.graphics.print("Press SPACE to spin", 250, TABLE_HEIGHT-30)
 end
 
--- Helper function for collision detection
-function checkCollisions()
-    -- Ball collision with player
-    local dx = state.player.x + PLAYER_SIZE/2 - state.ball.x
-    local dy = state.player.y + PLAYER_SIZE/2 - state.ball.y
-    local distance = math.sqrt(dx * dx + dy * dy)
-    
-    if distance < BALL_RADIUS + PLAYER_SIZE/2 then
-        state.player.money = state.player.money - 10
-    end
-    
-    -- Check if player is on wrong color block
-    local playerBlockIndex = math.floor(state.player.x / BLOCK_WIDTH) + 1
-    if playerBlockIndex <= #state.blocks then
-        local currentBlock = state.blocks[playerBlockIndex]
-        if currentBlock and currentBlock.isWhite ~= state.player.isWhite then
-            state.player.money = state.player.money - 0.5
+function roulette.mousepressed(x, y, button)
+    if not isSpinning then
+        local gridX, gridY = 100, 100
+        local cellWidth, cellHeight = 100, 100
+        
+        -- Check zero
+        if x >= gridX - cellWidth and x <= gridX and
+           y >= gridY and y <= gridY + cellHeight * 3 then
+            selectedNumber = 0
+            -- return
         end
+        
+        -- Check main grid
+        local numbers = {
+            {3, 6, 9, 12, 15, 18, 21, 24, 27},
+            {2, 5, 8, 11, 14, 17, 20, 23, 26},
+            {1, 4, 7, 10, 13, 16, 19, 22, 25}
+        }
+        
+        for row = 1, 3 do
+            for col = 1, 9 do
+                local btnX = gridX + (col-1) * cellWidth
+                local btnY = gridY + (row-1) * cellHeight
+                
+                if x >= btnX and x <= btnX + cellWidth and
+                   y >= btnY and y <= btnY + cellHeight then
+                    selectedNumber = numbers[row][col]
+                    -- return
+                end
+            end
+        end
+    end
+end
+
+function roulette.keypressed(key)
+    if key == "space" and not isSpinning and selectedNumber ~= nil and currentBet > 0 then
+        if world[entity].money >= currentBet then
+            isSpinning = true
+            spinTime = 0
+            ballSpeed = 10
+            gameResult = nil
+            game.addMoney(entity, -currentBet)
+        end
+    elseif key == "w" then
+        currentBet = math.min(currentBet + 100, world[entity].money)
+    elseif key == "s" then
+        currentBet = math.max(currentBet - 100, 0)
     end
 end
 

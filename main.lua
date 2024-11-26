@@ -9,13 +9,13 @@ local CScreen = require "Libraries/cscreen"
 -- Define the load function
 function love.load()
     -- Load window values
-    love.window.setFullscreen(true)
+    -- love.window.setFullscreen(true)
 
-    love.window.setMode(love.graphics.getWidth()/3, love.graphics.getHeight()/3) -- Set to 1920 x 1080 on launch
+    -- love.window.setMode(love.graphics.getWidth()/3, love.graphics.getHeight()/3) -- Set to 1920 x 1080 on launch
 
-    love.window.setFullscreen(true)
+    -- love.window.setFullscreen(true)
 
-    -- love.window.setMode(2340/2, 1080/2) -- Set to custom w / h for debug
+    love.window.setMode(2340/2, 1080/2) -- Set to custom w / h for debug
     -- print("THINGY")
     love.window.setTitle("Creative Game Name")
     love.math.setRandomSeed(os.time())

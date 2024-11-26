@@ -29,8 +29,11 @@ function slots.load()
     } 
     
     -- Set up fonts 
-    game.font = love.graphics.newFont(14)
-    game.largeFont = love.graphics.newFont(24)
+    font = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 100 * math.min(scaleStuff("w"), scaleStuff("h"))) -- The font
+    font1 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 75 * math.min(scaleStuff("w"), scaleStuff("h")))
+    font2 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 50 * math.min(scaleStuff("w"), scaleStuff("h")))
+    font3 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 25 * math.min(scaleStuff("w"), scaleStuff("h")))
+    love.graphics.setFont(font)
     
     -- Set up sounds
     --game.sounds = {
@@ -122,7 +125,6 @@ function slots.draw()
     
     -- Draw result message with background
     if game.result ~= "" then
-        love.graphics.setFont(game.largeFont)
         love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
         love.graphics.rectangle("fill", love.graphics.getWidth()/2 - 200, 395, 400, 50, 20, 20)
         love.graphics.setColor(1, 0.84, 0)
@@ -139,10 +141,9 @@ function slots.draw()
         love.graphics.setColor(1, 0, 1)
         love.graphics.rectangle("line", 5, 5+x, 175, 40, 20, 20)
         -- Draw money display text
-        love.graphics.setFont(game.largeFont)
         love.graphics.setColor(1, 0.84, 0)
         love.graphics.print(playerName .. ": " .. tostring(playerData.money), 5, 8+x)
-        x = x + 35
+        x = x + 30
 
     end
     -- world[nameInput.text].money
@@ -177,7 +178,6 @@ function slots.spin()
     
     -- Randomize slots
 
-
 end
 
 function slots.checkWin()
@@ -194,7 +194,7 @@ function slots.checkWin()
         game.result = "Matched two symbols! You win $" .. winAmount .. "!"
         -- game.sounds.cheer:play()
     else
-        winAmount = game.betAmount*-1
+        winAmount = game.betAmount * -1
         game.result = "You lost this round!"
         -- game.sounds.unhappy:play()
     end
