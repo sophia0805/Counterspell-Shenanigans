@@ -5,7 +5,7 @@ local minigame = {}
 local socket = require "socket"
 
 -- the address and port of the server
-local address, port = "37.27.51.34", 45167
+local address, port = "37.27.51.34", 45169
 
 local entity -- entity is what we'll be controlling
 local updaterate = 0.1 -- how long to wait, in seconds, before requesting an update
@@ -27,8 +27,10 @@ function game.load()
     math.randomseed(os.time())
     -- entity = tostring(math.random(99999))
     entity = nameInput.text
-    world[entity] = {x = 320, y = 240, timestamp = os.time(), money = 10000} -- Initialize `world[entity]`
-    local dg = string.format("%s %s %d %d %d", entity, 'at', 320, 240, 10000)
+    world[entity] = {params = {x = 320, y = 240, timestamp = os.time(), money = 10000}} -- Initialize `world[entity]`
+    
+    -- Send data in Lua table-like format
+    local dg = string.format("%s %s {x=%d,y=%d,money=%d}", entity, 'at', 320, 240, 10000)
     udp:send(dg)
 
     t = 0
@@ -54,76 +56,124 @@ function game.update(dt)
     lobbyupdate(dt)
 end
 
-function lobbyupdate(dt)
-    t = t + dt -- increase t by the dt
+local function parseData(data)
+    -- Remove braces from the data string
+    data = data:gsub("{", ""):gsub("}", "")
+    local result = {}
+    for k, v in string.gmatch(data, "([%w_]+)=([%w_.-]+)") do
+        local number = tonumber(v)
+        if number then
+            result[k] = number
+        else
+            result[k] = v
+        end
+    end
+    return result
+end
 
-    if love.keyboard.isDown('up') then diffy = diffy - (100 * dt) end
-    if love.keyboard.isDown('down') then diffy = diffy + (100 * dt) end
-    if love.keyboard.isDown('left') then diffx = diffx - (100 * dt) end
-    if love.keyboard.isDown('right') then diffx = diffx + (100 * dt) end
-    
+function lobbyupdate(dt)
+    t = t + dt
+    local currentTime = os.time()
+
+    -- Handle movement input
+    if love.keyboard.isDown("up") then diffy = diffy - (100 * dt) end
+    if love.keyboard.isDown("down") then diffy = diffy + (100 * dt) end
+    if love.keyboard.isDown("left") then diffx = diffx - (100 * dt) end
+    if love.keyboard.isDown("right") then diffx = diffx + (100 * dt) end
+
     if t > updaterate then
-        -- print(entity)
-        -- print(diffx - world[entity].x .. "," .. diffy - world[entity].y)
-        -- diffx, diffy = world[entity].x, world[entity].y
-        local dg = string.format("%s %s %d %d", entity, 'move', diffx, diffy)
+        -- Send movement update
+        local moveParams = string.format("{x=%d,y=%d}", diffx, diffy)
+        local dg = string.format("%s %s %s", entity, "move", moveParams)
         udp:send(dg)
         diffx, diffy = 0, 0
 
-
-        local dg = string.format("%s %s $", entity, 'update')
+        -- Request updates from the server
+        dg = string.format("%s %s {}", entity, "update")
         udp:send(dg)
 
-
-        t=t-updaterate -- set t for the next round
+        t = t - updaterate
     end
 
     repeat
         data, msg = udp:receive()
-        if msg and (msg ~= "timeout") then
-            print("Received Data: " .. ", " .. msg)
-        end
-
-        if data then -- you remember, right? that all values in lua evaluate as true, save nil and false?
-            ent, cmd, parms = data:match("^(%S*) (%S*) (.*)")
-            
-            -- print("Parsed data - Entity:", ent, "Command:", cmd, "Parameters:", parms)
-            if cmd == 'at' then
-                local x, y = parms:match("^(%-?[%d.e]*) (%-?[%d.e]*)$")
-                assert(x and y)
-                x, y = tonumber(x), tonumber(y)
-                print(entity .. " " .. world[entity].money)
-                world[ent] = {x=x, y=y, timestamp=os.time(), money = world[entity].money}  -- Add default money
-            elseif cmd == 'exit' then
-                print(ent .. " was just removed.")
+        if data then
+            -- print("Received data:", data) -- Debug incoming data
+            local ent, cmd, parms = data:match("^(%S*) (%S*) (.*)")
+            if cmd == "update" then
+                local params = parseData(parms)
+                -- Debug print
+                -- print("Decoded params for entity", ent)
+                for k, v in pairs(params) do
+                    -- print("Param:", k, v)
+                end
+                -- Initialize or update the entity in the world
+                world[ent] = world[ent] or {x = 0, y = 0, params = {}}
+                world[ent].x = params.x or world[ent].x
+                world[ent].y = params.y or world[ent].y
+                world[ent].params.money = params.money or world[ent].params.money
+                -- Merge params
+                for k, v in pairs(params) do
+                    if k ~= "x" and k ~= "y" then
+                        world[ent].params[k] = v
+                    end
+                end
+                world[ent].timestamp = currentTime  -- Update timestamp
+            elseif cmd == "exit" then
                 world[ent] = nil
             else
-                print("unrecognised command:", cmd)
+                print("Unrecognized command:", cmd)
             end
         end
     until not data
 
-    -- Check for entities that haven't been updated in the last second
-    local currentTime = os.time()
+    -- Cleanup inactive entities
     for k, v in pairs(world) do
-        if currentTime - v.timestamp > 2 then
-            print(k .. " was just removed due to inactivity.")
+        if currentTime - (v.timestamp or 0) > 2 then
             world[k] = nil
         end
     end
+end
+
+function game.setParameter(playerName, param, value)
+    if world[playerName] then
+        world[playerName].params = world[playerName].params or {} -- Ensure params table exists
+        world[playerName].params[param] = value
+        -- Send update to the server
+        local params = string.format("{%s=%d}", param, value)
+        local dg = string.format("%s %s %s", playerName, "at", params)
+        udp:send(dg)
+        
+        return true
+    end
+    return false
 end
 
 function love.draw()
     love.graphics.setColor(1, 1, 1)
     minigame.current.draw()
     love.graphics.setColor(1, 1, 1)
-    -- pretty simple, we 
+
+    -- Debug entities in the world
     for k, v in pairs(world) do
-        love.graphics.print(k, v.x, v.y-100)
-        if v.x > screenWidthA/2 then
-            love.graphics.draw(gamblingchildimage, v.x, v.y, rotation, -1, 1, childimageWidth / 2, childimageHeight / 2)
+        -- Verify coordinates
+        if v.x and v.y then
+            -- print(string.format("Drawing entity %s at (%d, %d)", k, v.x, v.y))
+            love.graphics.print(k, v.x, v.y - 100) -- Display the entity name
+            if gamblingchildimage then
+                if v.x > (love.graphics.getWidth() / 2) then
+                    love.graphics.draw(gamblingchildimage, v.x, v.y, 0, -1, 1, childimageWidth / 2, childimageHeight / 2)
+                else
+                    love.graphics.draw(gamblingchildimage, v.x, v.y, 0, 1, 1, childimageWidth / 2, childimageHeight / 2)
+                end
+            else
+                -- Draw a rectangle if the image is missing
+                love.graphics.setColor(1, 0, 0) -- Red for missing image
+                love.graphics.rectangle("fill", v.x, v.y, 50, 50)
+                love.graphics.setColor(1, 1, 1)
+            end
         else
-            love.graphics.draw(gamblingchildimage, v.x, v.y, rotation, 1, 1, childimageWidth / 2, childimageHeight / 2)
+            print(string.format("Entity %s has invalid coordinates: (%s, %s)", k, tostring(v.x), tostring(v.y)))
         end
     end
 end
@@ -146,7 +196,7 @@ end
 
 function game.setMoney(playerName, amount)
     if world[playerName] then
-        world[playerName].money = amount
+        world[playerName].params.money = amount
         -- Send update to server
         local dg = string.format("%s %s %d", playerName, 'money', amount)
         udp:send(dg)
@@ -157,9 +207,9 @@ end
 
 function game.addMoney(playerName, amount)
     if world[playerName] then
-        world[playerName].money = world[playerName].money + amount
+        world[playerName].params.money = world[playerName].params.money + amount
         -- Send update to server
-        local dg = string.format("%s %s %d", playerName, 'money', world[playerName].money)
+        local dg = string.format("%s %s %d", playerName, 'money', world[playerName].params.money)
         udp:send(dg)
         return true
     end
