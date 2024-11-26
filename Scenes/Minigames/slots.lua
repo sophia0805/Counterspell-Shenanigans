@@ -33,7 +33,7 @@ function slots.load()
     font1 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 75 * math.min(scaleStuff("w"), scaleStuff("h")))
     font2 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 50 * math.min(scaleStuff("w"), scaleStuff("h")))
     font3 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 25 * math.min(scaleStuff("w"), scaleStuff("h")))
-    love.graphics.setFont(font)
+    love.graphics.setFont(font2)
     
     -- Set up sounds
     --game.sounds = {
@@ -126,9 +126,9 @@ function slots.draw()
     -- Draw result message with background
     if game.result ~= "" then
         love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
-        love.graphics.rectangle("fill", love.graphics.getWidth()/2 - 200, 395, 400, 50, 20, 20)
+        love.graphics.rectangle("fill", love.graphics.getWidth()/2 - 250, 395, 500, 50, 20, 20)
         love.graphics.setColor(1, 0.84, 0)
-        love.graphics.rectangle("line", love.graphics.getWidth()/2 - 200, 395, 400, 50, 20, 20)
+        love.graphics.rectangle("line", love.graphics.getWidth()/2 - 250, 395, 500, 50, 20, 20)
         love.graphics.setColor(1, 1, 1)
         love.graphics.printf(game.result, 0, 400, love.graphics.getWidth(), "center")
     end

@@ -48,6 +48,7 @@ function roulette.load()
     font2 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 50 * math.min(scaleStuff("w"), scaleStuff("h")))
     font3 = love.graphics.newFont("/Fonts/VCR_OSD_MONO.ttf", 28 * math.min(scaleStuff("w"), scaleStuff("h")))
     love.graphics.setFont(font3)
+    love.graphics.setBackgroundColor(2, 51, 75, 1)
 end
 
 function roulette.update(dt)
@@ -79,6 +80,7 @@ function roulette.update(dt)
 end
 
 local function drawWheel()
+    love.graphics.setFont(font3)
     love.graphics.push()
     love.graphics.translate(TABLE_WIDTH, TABLE_HEIGHT/1.5)
     
@@ -117,6 +119,7 @@ local function drawWheel()
 end
 
 local function drawBettingTable()
+    love.graphics.setFont(font2)
     -- Draw green background
     love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
     love.graphics.rectangle("fill", 195, 5, 250, 40, 20, 20)
@@ -125,6 +128,7 @@ local function drawBettingTable()
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("Roulette", 200, 10)
     
+    love.graphics.setFont(font3)
     -- Draw number grid
     local gridX, gridY = 100, 100
     local cellWidth, cellHeight = 40, 40
@@ -176,21 +180,37 @@ end
 
 function roulette.draw()
     -- Draw background
-    love.graphics.clear(2 / 255, 51 / 255, 79 / 255)
-    love.graphics.setColor(0.2, 0.2, 0.2)
+    love.graphics.setColor(love.math.colorFromBytes(2, 51, 75))
     love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
     
     drawBettingTable()
     drawWheel()
     
     -- Draw UI text
+    love.graphics.setFont(font2)
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Current Bet: $" .. currentBet, 50, 20)
+    love.graphics.print("Current Bet: $" .. currentBet, love.graphics.getWidth()-300, 5)
+
     
     -- Draw instructions
     love.graphics.print("Click numbers to select bet", 50, TABLE_HEIGHT-30)
     love.graphics.print("Use UP/DOWN to change bet", 50, TABLE_HEIGHT-15)
     love.graphics.print("Press SPACE to spin", 250, TABLE_HEIGHT-30)
+
+    
+    local x = 0;
+    for playerName, playerData in pairs(world) do
+        -- Draw money display background and border
+        love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
+        love.graphics.rectangle("fill", 5, 5+x, 175, 40, 20, 20)
+        love.graphics.setColor(1, 0, 1)
+        love.graphics.rectangle("line", 5, 5+x, 175, 40, 20, 20)
+        -- Draw money display text
+        love.graphics.setColor(1, 0.84, 0)
+        love.graphics.print(playerName .. ": " .. tostring(playerData.money), 5, 8+x)
+        x = x + 30
+
+    end
 end
 
 function roulette.mousepressed(x, y, button)
@@ -242,5 +262,4 @@ function roulette.keypressed(key)
         currentBet = math.max(currentBet - 100, 0)
     end
 end
-
 return roulette
