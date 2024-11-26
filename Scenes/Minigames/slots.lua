@@ -2,6 +2,9 @@
 
 local slots = {}
 
+-- Access the game module
+local gameModule = game
+
 -- Game state
 local game = {
     images = {},
@@ -12,6 +15,7 @@ local game = {
     result = "",
     resultTimer = 0
 }
+
 
 -- Constants
 local SLOT_WIDTH = 100
@@ -141,11 +145,11 @@ function slots.draw()
         -- Draw money display text
         love.graphics.setFont(game.largeFont)
         love.graphics.setColor(1, 0.84, 0)
-        love.graphics.print(playerName .. ": " .. tostring(playerData.money), 5, 8+x)
+        love.graphics.print(playerName .. ": " .. tostring(playerData.params.money), 5, 8+x)
         x = x + 35
 
     end
-    -- world[nameInput.text].money
+    -- world[nameInput.text].params.money
 end
 
 function love.mousepressed(x, y, button)
@@ -158,49 +162,68 @@ function love.mousepressed(x, y, button)
 end
 
 function slots.spin()
+    -- Check if the player exists and has money
+    local player = world[nameInput.text]
+    print(player.params.money)
+    if player and player.params and player.params.money then
+        local playerMoney = player.params.money
+        if playerMoney < game.betAmount then
+            game.result = "You don't have enough money to play!"
+            game.resultTimer = 2
+            return
+        end
+        player.params.money = playerMoney - game.betAmount
+        setParameter(nameInput.text, 'money', player.params.money)
+    else
+        game.result = "Money data not available."
+        game.resultTimer = 2
+        return
+    end
+
+    game.spinning = true
+    -- Randomize slots
     for i = 1, 3 do
         game.slots[i] = love.math.random(1, #game.images)
     end
-
-    if not world[nameInput.text] then
-        world[nameInput.text] = {money = 1000}
-    end
-    
-    if world[nameInput.text].money < game.betAmount then
-        game.result = "You don't have enough money to play!"
-        game.resultTimer = 2
-        -- return
-    end
-    
-    world[nameInput.text].money = world[nameInput.text].money - game.betAmount
-    game.spinning = true
-    
-    -- Randomize slots
-
-
 end
 
 function slots.checkWin()
     local winAmount = 0
-    
+
     -- Check for three of a kind
     if game.slots[1] == game.slots[2] and game.slots[2] == game.slots[3] then
         winAmount = game.betAmount * 5
         game.result = "Jackpot! You win $" .. winAmount .. "!"
-        -- game.sounds.cheer:play()
     -- Check for two of a kind
     elseif game.slots[1] == game.slots[2] or game.slots[2] == game.slots[3] or game.slots[1] == game.slots[3] then
         winAmount = game.betAmount * 0.5
         game.result = "Matched two symbols! You win $" .. winAmount .. "!"
-        -- game.sounds.cheer:play()
     else
-        winAmount = game.betAmount*-1
+        winAmount = 0
         game.result = "You lost this round!"
-        -- game.sounds.unhappy:play()
     end
-    
-    world[nameInput.text].money = world[nameInput.text].money + winAmount
+
+    -- Update player's money
+    local player = world[nameInput.text]
+    if player and player.params then
+        player.params.money = player.params.money + winAmount
+        setParameter(nameInput.text, 'money', player.params.money)
+    end
+
     game.resultTimer = 2
+end
+
+function setParameter(playerName, param, value)
+    if world[playerName] then
+        world[playerName].params = world[playerName].params or {} -- Ensure params table exists
+        world[playerName].params[param] = value
+        -- Send update to the server
+        local params = string.format("{%s=%d}", param, value)
+        local dg = string.format("%s %s %s", playerName, "at", params)
+        udp:send(dg)
+        return true
+    end
+    return false
 end
 
 return slots
