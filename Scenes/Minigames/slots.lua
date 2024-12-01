@@ -16,7 +16,6 @@ local game = {
     resultTimer = 0
 }
 
-
 -- Constants
 local SLOT_WIDTH = 100
 local SLOT_HEIGHT = 120
