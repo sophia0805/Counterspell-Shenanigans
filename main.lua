@@ -42,7 +42,7 @@ function love.update(dt) -- Runs every frame.
     elseif nextState == "mainMenu" then
         -- Switch to the main menu scene
         print("Switching to the main menu scene")
-        state.current = require("Scenes/mainMenu")
+        state.current = require("Scenes/mainMenu") 
         state.current.load()
     end
 end

@@ -180,7 +180,7 @@ end
 
 function roulette.draw()
     -- Draw background
-    love.graphics.setColor(love.math.colorFromBytes(2, 51, 75))
+    
     love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
     
     drawBettingTable()
