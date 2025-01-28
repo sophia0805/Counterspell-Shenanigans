@@ -209,7 +209,7 @@ function roulette.draw()
         love.graphics.setColor(1, 0.84, 0)
         love.graphics.print(playerName .. ": " .. tostring(playerData.money), 5, 8+x)
         x = x + 30
-
+        
     end
 end
 
