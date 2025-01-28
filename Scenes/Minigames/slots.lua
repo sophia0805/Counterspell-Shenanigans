@@ -163,8 +163,8 @@ end
 function slots.spin()
     -- Check if the player exists and has money
     local player = world[nameInput.text]
-    print(player.params.money)
     if player and player.params and player.params.money then
+        print(player.params.money)
         local playerMoney = player.params.money
         if playerMoney < game.betAmount then
             game.result = "You don't have enough money to play!"
